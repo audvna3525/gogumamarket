@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/*
+ * 고구마마켓 디자인 토큰
+ * - goguma: 잘 구운 고구마 같은 따뜻한 주황 브랜드 컬러 (신뢰·친근)
+ * - ink: 본문 텍스트용 차분한 먹색 계열
+ */
+@theme {
+  --color-goguma-50: #fff5ed;
+  --color-goguma-100: #ffe8d4;
+  --color-goguma-200: #ffcea8;
+  --color-goguma-300: #ffac70;
+  --color-goguma-400: #ff8438;
+  --color-goguma-500: #ff6a10;
+  --color-goguma-600: #ee5104;
+  --color-goguma-700: #c53d07;
+  --color-goguma-800: #9c320e;
+  --color-goguma-900: #7e2c0f;
+
+  --color-ink-500: #6b7280;
+  --color-ink-700: #374151;
+  --color-ink-900: #111827;
+
+  --font-sans:
+    "Pretendard", "Pretendard Variable", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #f7f8fa;
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
