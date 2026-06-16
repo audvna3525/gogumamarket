@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { Store, PackagePlus, LogOut } from "lucide-react";
+import { Store, PackagePlus, LogOut, UserRound } from "lucide-react";
 import Logo from "@/components/Logo";
 import { logout } from "@/lib/actions/auth";
 
-/** 사이트 공통 상단 헤더 (둘러보기 / 판매하기 / 로그인·로그아웃) */
+/** 사이트 공통 상단 헤더 (둘러보기 / 내 프로필 / 판매하기 / 로그인·로그아웃) */
 export default function SiteHeader({
   userEmail,
+  userId,
 }: {
   userEmail?: string | null;
+  userId?: string | null;
 }) {
   return (
     <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur">
@@ -28,6 +30,15 @@ export default function SiteHeader({
                 <span className="font-semibold text-ink-700">{userEmail}</span>{" "}
                 님
               </span>
+              {userId && (
+                <Link
+                  href={`/users/${userId}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-ink-700 transition hover:bg-gray-50"
+                >
+                  <UserRound className="h-4 w-4" />
+                  내 프로필
+                </Link>
+              )}
               <Link
                 href="/sell"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-goguma-500 px-3.5 py-2 text-sm font-bold text-white shadow-sm shadow-goguma-500/30 transition hover:bg-goguma-600"

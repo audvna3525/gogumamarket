@@ -49,7 +49,7 @@ export default async function HomePage() {
   return (
     <>
       {/* 상단 헤더 */}
-      <SiteHeader userEmail={user?.email} />
+      <SiteHeader userEmail={user?.email} userId={user?.id} />
 
       <main className="flex-1">
         {/* 히어로 */}

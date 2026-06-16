@@ -2,13 +2,18 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Clock,
-  CircleUser,
   PackageOpen,
   ChevronRight,
   SquarePen,
 } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
+import Avatar from "@/components/Avatar";
 import DeleteProductButton from "@/components/DeleteProductButton";
+import LikeButton from "@/components/LikeButton";
+import CommentSection, {
+  type CommentThread,
+} from "@/components/CommentSection";
+import { type CommentView } from "@/components/CommentItem";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatRelativeTime, STATUS_LABEL } from "@/lib/format";
 
@@ -40,7 +45,7 @@ export default async function ProductDetailPage({
   if (!product) {
     return (
       <>
-        <SiteHeader userEmail={user?.email} />
+        <SiteHeader userEmail={user?.email} userId={user?.id} />
         <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-3 px-4 py-20 text-center">
           <PackageOpen className="h-12 w-12 text-goguma-500" />
           <h1 className="text-xl font-extrabold text-ink-900">
@@ -63,9 +68,74 @@ export default async function ProductDetailPage({
   const isOwner = user?.id === product.user_id;
   const isSold = product.status === "sold";
 
+  // 좋아요: 전체 개수와, 로그인한 내가 눌렀는지 여부
+  const { count: likeCount } = await supabase
+    .from("likes")
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", product.id);
+
+  let likedByMe = false;
+  if (user) {
+    const { data: myLike } = await supabase
+      .from("likes")
+      .select("id")
+      .eq("product_id", product.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    likedByMe = !!myLike;
+  }
+
+  // 댓글: 이 글의 모든 댓글을 오래된 순으로 불러와 댓글/대댓글 묶음으로 정리
+  const { data: rawComments } = await supabase
+    .from("comments")
+    .select("id, user_id, parent_id, body, created_at, updated_at")
+    .eq("product_id", product.id)
+    .order("created_at", { ascending: true });
+
+  const comments = rawComments ?? [];
+
+  // 판매자 + 댓글 작성자들의 프로필(닉네임·사진)을 한 번에 불러와 지도를 만듭니다.
+  const authorIds = Array.from(
+    new Set<string>([product.user_id, ...comments.map((c) => c.user_id)]),
+  );
+  const { data: profileRows } = await supabase
+    .from("profiles")
+    .select("id, nickname, avatar_url")
+    .in("id", authorIds);
+
+  const profileMap = new Map(
+    (profileRows ?? []).map((p) => [p.id, p]),
+  );
+  const sellerProfile = profileMap.get(product.user_id);
+
+  const toView = (c: (typeof comments)[number]): CommentView => {
+    const prof = profileMap.get(c.user_id);
+    return {
+      id: c.id,
+      body: c.body,
+      parentId: c.parent_id,
+      createdAt: c.created_at,
+      updatedAt: c.updated_at,
+      authorId: c.user_id,
+      nickname: prof?.nickname ?? "이웃",
+      avatarUrl: prof?.avatar_url ?? null,
+      isMine: !!user && c.user_id === user.id,
+      isSeller: c.user_id === product.user_id,
+    };
+  };
+
+  const threads: CommentThread[] = comments
+    .filter((c) => c.parent_id === null)
+    .map((parent) => ({
+      ...toView(parent),
+      replies: comments
+        .filter((c) => c.parent_id === parent.id)
+        .map(toView),
+    }));
+
   return (
     <>
-      <SiteHeader userEmail={user?.email} />
+      <SiteHeader userEmail={user?.email} userId={user?.id} />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 sm:py-8">
         {/* 목록으로 */}
@@ -138,18 +208,31 @@ export default async function ProductDetailPage({
             </div>
           )}
 
-          {/* 판매자 */}
-          <div className="mt-5 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-goguma-50 text-goguma-600">
-              <CircleUser className="h-6 w-6" />
-            </span>
-            <div className="text-sm">
-              <p className="font-bold text-ink-900">
-                {isOwner ? "나" : "우리 동네 이웃"}
+          {/* 판매자 — 누르면 이 사람의 글 모아보기로 이동 */}
+          <Link
+            href={`/users/${product.user_id}`}
+            className="mt-5 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:bg-gray-50"
+          >
+            <Avatar
+              url={sellerProfile?.avatar_url}
+              name={sellerProfile?.nickname}
+              size={44}
+            />
+            <div className="min-w-0 text-sm">
+              <p className="flex items-center gap-1.5 font-bold text-ink-900">
+                <span className="truncate">
+                  {sellerProfile?.nickname ?? "우리 동네 이웃"}
+                </span>
+                {isOwner && (
+                  <span className="shrink-0 rounded-full bg-goguma-100 px-2 py-0.5 text-[11px] font-semibold text-goguma-700">
+                    나
+                  </span>
+                )}
               </p>
-              <p className="text-ink-500">고구마마켓 판매자</p>
+              <p className="text-ink-500">고구마마켓 판매자 · 글 모아보기</p>
             </div>
-          </div>
+            <ChevronRight className="ml-auto h-5 w-5 shrink-0 text-ink-500" />
+          </Link>
 
           {/* 설명 */}
           <div className="mt-6">
@@ -160,11 +243,30 @@ export default async function ProductDetailPage({
           </div>
         </div>
 
-        {/* 하단 액션 (채팅은 다음 단계 예정) */}
-        <div className="mt-8 flex items-center justify-between gap-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-4">
-          <p className="text-sm text-ink-500">
-            채팅 문의 기능은 다음 단계에서 추가될 예정이에요.
+        {/* 좋아요 */}
+        <div className="mt-8 flex flex-col items-center gap-2 rounded-2xl border border-gray-100 bg-white py-5">
+          <LikeButton
+            productId={product.id}
+            initialLiked={likedByMe}
+            initialCount={likeCount ?? 0}
+            isLoggedIn={!!user}
+          />
+          <p className="text-xs text-ink-500">
+            이 상품이 마음에 들면 좋아요를 눌러 주세요.
           </p>
+        </div>
+
+        {/* 댓글 · 대댓글 */}
+        <CommentSection
+          productId={product.id}
+          threads={threads}
+          isLoggedIn={!!user}
+          isSellerViewer={isOwner}
+          totalCount={comments.length}
+        />
+
+        {/* 다른 상품 보기 */}
+        <div className="mt-8 flex items-center justify-end">
           <Link
             href="/products"
             className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-goguma-600 hover:underline"

@@ -20,7 +20,7 @@ export default async function ProductsPage() {
 
   return (
     <>
-      <SiteHeader userEmail={user?.email} />
+      <SiteHeader userEmail={user?.email} userId={user?.id} />
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:py-10">
         <div className="mb-6 flex items-end justify-between gap-3">
