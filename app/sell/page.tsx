@@ -39,7 +39,7 @@ export default async function SellPage() {
           </p>
         </div>
 
-        <SellForm />
+        <SellForm userId={user.id} />
       </main>
 
       <footer className="border-t border-gray-100 bg-white">

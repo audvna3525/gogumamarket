@@ -9,6 +9,7 @@ export type ProductListItem = {
   category: string;
   status: string;
   created_at: string;
+  image_url: string | null;
 };
 
 /** 목록에 보이는 상품 카드 하나 */
@@ -20,9 +21,19 @@ export default function ProductCard({ product }: { product: ProductListItem }) {
       href={`/products/${product.id}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
     >
-      {/* 사진 자리 (아직 사진 없음) */}
-      <div className="relative grid aspect-square place-items-center bg-gradient-to-br from-goguma-100 to-goguma-50 text-4xl">
-        <span className="transition group-hover:scale-110">🍠</span>
+      {/* 사진: 올린 사진이 있으면 보여주고, 없으면 고구마 이모지 자리 */}
+      <div className="relative grid aspect-square place-items-center overflow-hidden bg-gradient-to-br from-goguma-100 to-goguma-50 text-4xl">
+        {product.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.image_url}
+            alt={product.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition group-hover:scale-105"
+          />
+        ) : (
+          <span className="transition group-hover:scale-110">🍠</span>
+        )}
         <span className="absolute left-2 top-2 rounded-md bg-white/80 px-2 py-0.5 text-xs font-semibold text-ink-700 backdrop-blur">
           {product.category}
         </span>

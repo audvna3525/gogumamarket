@@ -30,7 +30,7 @@ export default async function ProductDetailPage({
     ? (
         await supabase
           .from("products")
-          .select("id, user_id, title, price, category, status, description, created_at")
+          .select("id, user_id, title, price, category, status, description, created_at, image_url")
           .eq("id", numericId)
           .maybeSingle()
       ).data
@@ -77,9 +77,18 @@ export default async function ProductDetailPage({
           둘러보기로 돌아가기
         </Link>
 
-        {/* 사진 자리 (아직 사진 없음) */}
+        {/* 사진: 올린 사진이 있으면 크게 보여주고, 없으면 고구마 이모지 */}
         <div className="relative grid aspect-[4/3] place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-goguma-100 to-goguma-50 text-7xl">
-          🍠
+          {product.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={product.image_url}
+              alt={product.title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            "🍠"
+          )}
           {product.status !== "selling" && (
             <span
               className={`absolute left-3 top-3 rounded-lg px-2.5 py-1 text-sm font-bold text-white ${

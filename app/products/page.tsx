@@ -15,7 +15,7 @@ export default async function ProductsPage() {
   // 판매글을 최신순으로 불러옵니다.
   const { data: products, error } = await supabase
     .from("products")
-    .select("id, title, price, category, status, created_at")
+    .select("id, title, price, category, status, created_at, image_url")
     .order("created_at", { ascending: false });
 
   return (

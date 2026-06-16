@@ -24,7 +24,7 @@ export default async function EditProductPage({
     ? (
         await supabase
           .from("products")
-          .select("id, user_id, title, price, category, description")
+          .select("id, user_id, title, price, category, description, image_url")
           .eq("id", numericId)
           .maybeSingle()
       ).data
@@ -79,12 +79,14 @@ export default async function EditProductPage({
         </div>
 
         <SellForm
+          userId={user.id}
           product={{
             id: product.id,
             title: product.title,
             price: product.price,
             category: product.category,
             description: product.description,
+            image_url: product.image_url,
           }}
         />
       </main>
